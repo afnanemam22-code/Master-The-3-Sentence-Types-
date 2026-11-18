@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Adventure - Grade 6 Grammar Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        
+        /* Custom Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            70% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* 3D Button Styles */
+        .btn-3d {
+            transition: all 0.1s ease;
+            position: relative;
+            top: 0;
+        }
+        .btn-3d:active {
+            top: 4px;
+        }
+
+        .btn-simple {
+            background: #3b82f6;
+            box-shadow: 0 6px 0 #1d4ed8;
+        }
+        .btn-simple:hover { background: #60a5fa; }
+        .btn-simple:active { box-shadow: 0 2px 0 #1d4ed8; }
+
+        .btn-compound {
+            background: #10b981;
+            box-shadow: 0 6px 0 #047857;
+        }
+        .btn-compound:hover { background: #34d399; }
+        .btn-compound:active { box-shadow: 0 2px 0 #047857; }
+
+        .btn-complex {
+            background: #f59e0b;
+            box-shadow: 0 6px 0 #b45309;
+        }
+        .btn-complex:hover { background: #fbbf24; }
+        .btn-complex:active { box-shadow: 0 2px 0 #b45309; }
+
+        .btn-class-a {
+            background: #6366f1;
+            box-shadow: 0 6px 0 #4338ca;
+        }
+        .btn-class-a:hover { background: #818cf8; }
+        .btn-class-a:active { box-shadow: 0 2px 0 #4338ca; }
+
+        .btn-class-d {
+            background: #ec4899;
+            box-shadow: 0 6px 0 #be185d;
+        }
+        .btn-class-d:hover { background: #f472b6; }
+        .btn-class-d:active { box-shadow: 0 2px 0 #be185d; }
+
+        .btn-general {
+            background: #0ea5e9;
+            box-shadow: 0 6px 0 #0369a1;
+        }
+        .btn-general:hover { background: #38bdf8; }
+        .btn-general:active { box-shadow: 0 2px 0 #0369a1; }
+
+        /* 3D Card Flip Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Student Grid Card Hover */
+        .student-card {
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .student-card:hover {
+            transform: translateY(-6px) scale(1.03);
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 text-gray-800">
+
+    <!-- Confetti Canvas for Celebrations -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Main Game Container -->
+    <div id="game-wrapper" class="w-full max-w-5xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border-4 border-white/50">
+        
+        <!-- Header Bar -->
+        <div class="bg-indigo-900 text-white p-4 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-3xl animate-float">🚀</span>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-wide text-yellow-300">Sentence Space Mission</h1>
+                    <p class="text-xs text-indigo-200">Grade 6 English Grammar Challenge</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <!-- Active Class Badge -->
+                <span id="header-class-badge" class="hidden bg-yellow-400 text-indigo-950 px-3 py-1 rounded-xl text-sm font-bold shadow">
+                    Grade 6 A
+                </span>
+                <!-- Cheat Sheet Button -->
+                <button onclick="toggleModal('guide-modal')" class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold flex items-center gap-1 transition shadow cursor-pointer">
+                    <span>💡</span> <span class="hidden sm:inline">Grammar Guide</span>
+                </button>
+                <!-- Sound Toggle -->
+                <button id="sound-btn" onclick="toggleSound()" class="bg-indigo-700 hover:bg-indigo-600 p-2 rounded-xl text-lg transition shadow cursor-pointer" title="Toggle Sound">
+                    🔊
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 1: START SCREEN (DASHBOARD) -->
+        <div id="start-screen" class="p-6 md:p-10 text-center space-y-6">
+            <div class="inline-block bg-indigo-100 text-indigo-800 px-4 py-1 rounded-full font-bold text-sm mb-2">
+                Grade 6 English Grammar • Interactive Mission
+            </div>
+            
+            <h2 class="text-3xl md:text-5xl font-bold text-indigo-950">Master the 3 Sentence Types!</h2>
+            <p class="text-gray-600 text-lg max-w-xl mx-auto">
+                Help Captain Nova fuel the spaceship by identifying whether each sentence is <span class="text-blue-600 font-bold">Simple</span>, <span class="text-emerald-600 font-bold">Compound</span>, or <span class="text-amber-600 font-bold">Complex</span>!
+            </p>
+
+            <!-- Quick Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left my-6">
+                <div class="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-blue-700 text-lg">1. Simple</span>
+                        <span class="text-xl">🌱</span>
+                    </div>
+                    <p class="text-sm text-gray-600">1 complete thought (Subject + Verb).</p>
+                    <p class="text-xs text-blue-800 mt-2 italic">"The dog barked loudly."</p>
+                </div>
+
+                <div class="bg-emerald-50 border-2 border-emerald-200 p-4 rounded-2xl">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-emerald-700 text-lg">2. Compound</span>
+                        <span class="text-xl">🔗</span>
+                    </div>
+                    <p class="text-sm text-gray-600">2 thoughts joined by <b>FANBOYS</b> (for, and, nor, but, or, yet, so).</p>
+                    <p class="text-xs text-emerald-800 mt-2 italic">"I ran fast, <b>but</b> I missed the bus."</p>
+                </div>
+
+                <div class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-amber-700 text-lg">3. Complex</span>
+                        <span class="text-xl">🧩</span>
+                    </div>
+                    <p class="text-sm text-gray-600">1 complete + 1 incomplete thought (because, when, if, although...).</p>
+                    <p class="text-xs text-amber-800 mt-2 italic">"<b>Because</b> it rained, we stayed inside."</p>
+                </div>
+            </div>
+
+            <!-- Class Selection Buttons -->
+            <div class="pt-2 space-y-3">
+                <p class="text-sm font-bold uppercase tracking-wider text-indigo-900">Select Your Class to View Students:</p>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <button onclick="openClassRoster('Grade 6 A')" class="btn-3d btn-class-a w-full sm:w-auto text-white text-xl md:text-2xl font-bold py-4 px-10 rounded-2xl shadow-lg transform transition hover:scale-105 cursor-pointer flex items-center justify-center gap-2">
+                        <span>👩‍🚀</span> <span>Grade 6 A</span>
+                    </button>
+                    <button onclick="openClassRoster('Grade 6 D')" class="btn-3d btn-class-d w-full sm:w-auto text-white text-xl md:text-2xl font-bold py-4 px-10 rounded-2xl shadow-lg transform transition hover:scale-105 cursor-pointer flex items-center justify-center gap-2">
+                        <span>🌟</span> <span>Grade 6 D</span>
+                    </button>
+                    <button onclick="startGeneralQuiz()" class="btn-3d btn-general w-full sm:w-auto text-white text-xl md:text-2xl font-bold py-4 px-8 rounded-2xl shadow-lg transform transition hover:scale-105 cursor-pointer flex items-center justify-center gap-2">
+                        <span>🎯</span> <span>General Questions</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: STUDENT CARDS ROSTER -->
+        <div id="roster-screen" class="hidden p-6 md:p-8 space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-4 bg-indigo-50 p-4 rounded-2xl border-2 border-indigo-100">
+                <div>
+                    <h2 id="roster-title" class="text-2xl md:text-3xl font-bold text-indigo-950">Grade 6 A Stars ✨</h2>
+                    <p class="text-sm text-indigo-700 font-medium">Tap a student's card to flip it and reveal her grammar challenge!</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="bg-white px-4 py-2 rounded-xl shadow-sm font-bold text-indigo-900 border border-indigo-200">
+                        Completed: <span id="roster-progress" class="text-emerald-600">0/20</span>
+                    </div>
+                    <button onclick="returnToDashboard()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl shadow transition cursor-pointer">
+                        ⬅️ Classes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Colorful Student Cards Grid -->
+            <div id="students-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Student cards injected dynamically -->
+            </div>
+        </div>
+
+        <!-- SCREEN 3: GENERAL QUESTIONS CHALLENGE (10 Questions) -->
+        <div id="general-screen" class="hidden p-6 md:p-10 space-y-6">
+            <!-- Top Progress & Score Bar -->
+            <div class="flex flex-wrap justify-between items-center gap-4 bg-sky-50 p-4 rounded-2xl border-2 border-sky-200">
+                <div class="flex items-center gap-3">
+                    <span class="bg-sky-600 text-white font-bold px-4 py-1.5 rounded-xl text-sm md:text-base shadow">
+                        Question <span id="gen-q-num">1</span> / 10
+                    </span>
+                    <div class="w-32 sm:w-48 h-3 bg-sky-200 rounded-full overflow-hidden">
+                        <div id="gen-progress-bar" class="h-full bg-sky-600 transition-all duration-300" style="width: 10%;"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="bg-white px-4 py-1.5 rounded-xl shadow-sm font-bold text-indigo-900 border border-sky-200">
+                        Score: <span id="gen-score" class="text-emerald-600">0</span> / 10
+                    </div>
+                    <button onclick="exitGeneralQuiz()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-1.5 rounded-xl shadow transition cursor-pointer">
+                        ⬅️ Dashboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div id="gen-question-area" class="bg-white border-2 border-indigo-100 rounded-3xl p-6 md:p-8 shadow-lg text-center space-y-5">
+                <span class="text-xs uppercase tracking-wider font-bold text-sky-600 bg-sky-100 px-3 py-1 rounded-full">
+                    General Grammar Challenge • Identify the Sentence Type:
+                </span>
+
+                <div class="bg-indigo-50/80 border-2 border-indigo-100 rounded-2xl p-6">
+                    <p id="gen-sentence-text" class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed">
+                        "Sentence goes here..."
+                    </p>
+                </div>
+
+                <!-- Clue Button -->
+                <div>
+                    <button id="gen-hint-btn" onclick="showGenHint()" class="text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold px-4 py-1.5 rounded-full transition cursor-pointer">
+                        🔍 Need a Clue?
+                    </button>
+                    <p id="gen-hint-text" class="hidden mt-2 text-sm text-purple-800 font-medium bg-purple-50 px-4 py-2 rounded-xl border border-purple-200 inline-block"></p>
+                </div>
+
+                <!-- Answer Buttons -->
+                <div id="gen-options-container" class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 max-w-2xl mx-auto">
+                    <button onclick="submitGeneralAnswer('Simple')" class="btn-3d btn-simple text-white font-bold py-4 px-5 rounded-2xl text-xl flex flex-col items-center justify-center cursor-pointer">
+                        <span>Simple</span>
+                        <span class="text-xs font-normal opacity-90">1 Complete Idea</span>
+                    </button>
+
+                    <button onclick="submitGeneralAnswer('Compound')" class="btn-3d btn-compound text-white font-bold py-4 px-5 rounded-2xl text-xl flex flex-col items-center justify-center cursor-pointer">
+                        <span>Compound</span>
+                        <span class="text-xs font-normal opacity-90">FANBOYS</span>
+                    </button>
+
+                    <button onclick="submitGeneralAnswer('Complex')" class="btn-3d btn-complex text-white font-bold py-4 px-5 rounded-2xl text-xl flex flex-col items-center justify-center cursor-pointer">
+                        <span>Complex</span>
+                        <span class="text-xs font-normal opacity-90">because, when, if...</span>
+                    </button>
+                </div>
+
+                <!-- Feedback Box -->
+                <div id="gen-feedback-box" class="hidden pop-in rounded-2xl p-5 border-2 text-center space-y-3 max-w-2xl mx-auto">
+                    <div id="gen-encouragement" class="text-2xl font-bold"></div>
+                    <p id="gen-explanation" class="text-gray-700 text-base font-medium"></p>
+                    <div class="pt-1 flex flex-wrap justify-center gap-3">
+                        <button id="gen-retry-btn" onclick="retryGeneralSameQuestion()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl shadow transition cursor-pointer">
+                            Try Again 💡
+                        </button>
+                        <button id="gen-next-btn" onclick="nextGeneralQuestion()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-8 rounded-xl shadow transition cursor-pointer">
+                            Next Question ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Summary Card (Shown after 10 questions) -->
+            <div id="gen-summary-area" class="hidden pop-in bg-gradient-to-br from-indigo-50 to-sky-50 border-2 border-indigo-200 rounded-3xl p-8 text-center space-y-5">
+                <div class="text-6xl animate-bounce">🏆</div>
+                <h3 class="text-3xl md:text-4xl font-bold text-indigo-950">Challenge Complete!</h3>
+                <p id="gen-final-score-text" class="text-2xl font-bold text-emerald-600">You scored 10 out of 10!</p>
+                <p id="gen-final-remark" class="text-gray-600 text-lg max-w-md mx-auto">Amazing mastery of Simple, Compound, and Complex sentences!</p>
+                <div class="pt-2 flex flex-wrap justify-center gap-4">
+                    <button onclick="startGeneralQuiz()" class="btn-3d btn-general text-white font-bold py-3 px-8 rounded-2xl text-lg cursor-pointer">
+                        Play Again 🔄
+                    </button>
+                    <button onclick="exitGeneralQuiz()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-8 rounded-2xl text-lg shadow transition cursor-pointer">
+                        Back to Dashboard 🏠
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLIP CARD QUESTION MODAL (Reveals when a student card is clicked) -->
+        <div id="flip-modal" class="hidden fixed inset-0 bg-indigo-950/75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+            <div class="w-full max-w-2xl h-[520px] sm:h-[480px] perspective-1000">
+                <div id="flip-card-inner" class="flip-card-inner">
+                    
+                    <!-- FRONT OF CARD (Student Name & Color) -->
+                    <div id="flip-front-face" class="flip-card-front bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8 flex flex-col items-center justify-center shadow-2xl border-4 border-white">
+                        <div class="text-6xl mb-4 animate-bounce">👩‍🚀</div>
+                        <h3 id="flip-front-name" class="text-3xl md:text-4xl font-bold text-center">Student Name</h3>
+                        <p class="mt-2 text-white/90 font-semibold">Get ready for your question...</p>
+                    </div>
+
+                    <!-- BACK OF CARD (The Question & Feedback) -->
+                    <div class="flip-card-back bg-white p-5 md:p-7 flex flex-col justify-between shadow-2xl border-4 border-indigo-200 overflow-y-auto">
+                        <!-- Top Student Header -->
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span id="active-student-badge" class="px-4 py-1.5 rounded-full text-white font-bold text-base shadow-sm">
+                                    Student Name
+                                </span>
+                                <span id="active-class-pill" class="text-xs font-bold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                                    Grade 6 A
+                                </span>
+                            </div>
+                            <button onclick="closeFlipModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 w-9 h-9 rounded-full font-bold flex items-center justify-center cursor-pointer" title="Back to Student Cards">
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Question Content -->
+                        <div class="my-auto py-3 text-center space-y-3">
+                            <span class="text-xs uppercase tracking-wider font-bold text-indigo-400">Identify the Sentence Type:</span>
+                            <div class="bg-indigo-50/80 border-2 border-indigo-100 rounded-2xl p-4 md:p-5">
+                                <p id="card-sentence-text" class="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed">
+                                    "Sentence goes here..."
+                                </p>
+                            </div>
+                            
+                            <!-- Hint -->
+                            <div>
+                                <button id="card-hint-btn" onclick="showCardHint()" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold px-3 py-1 rounded-full transition cursor-pointer">
+                                    🔍 Need a Clue?
+                                </button>
+                                <p id="card-hint-text" class="hidden mt-2 text-xs md:text-sm text-purple-800 font-medium bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200"></p>
+                            </div>
+                        </div>
+
+                        <!-- Answer Buttons -->
+                        <div id="card-options-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                            <button onclick="submitStudentAnswer('Simple')" class="btn-3d btn-simple text-white font-bold py-3 px-4 rounded-2xl text-lg flex flex-col items-center justify-center cursor-pointer">
+                                <span>Simple</span>
+                                <span class="text-[11px] font-normal opacity-90">1 Complete Idea</span>
+                            </button>
+
+                            <button onclick="submitStudentAnswer('Compound')" class="btn-3d btn-compound text-white font-bold py-3 px-4 rounded-2xl text-lg flex flex-col items-center justify-center cursor-pointer">
+                                <span>Compound</span>
+                                <span class="text-[11px] font-normal opacity-90">FANBOYS</span>
+                            </button>
+
+                            <button onclick="submitStudentAnswer('Complex')" class="btn-3d btn-complex text-white font-bold py-3 px-4 rounded-2xl text-lg flex flex-col items-center justify-center cursor-pointer">
+                                <span>Complex</span>
+                                <span class="text-[11px] font-normal opacity-90">because, when, if...</span>
+                            </button>
+                        </div>
+
+                        <!-- Encouragement & Result Box -->
+                        <div id="card-feedback-box" class="hidden pop-in rounded-2xl p-4 border-2 text-center space-y-2">
+                            <div id="card-encouragement" class="text-xl md:text-2xl font-bold"></div>
+                            <p id="card-explanation" class="text-gray-700 text-sm md:text-base font-medium"></p>
+                            <div class="pt-1 flex flex-wrap justify-center gap-3">
+                                <button id="same-question-btn" onclick="retrySameQuestion()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-5 rounded-xl shadow transition cursor-pointer">
+                                    Try Same Question Again 💡
+                                </button>
+                                <button id="try-again-btn" onclick="retryStudentQuestion()" class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-5 rounded-xl shadow transition cursor-pointer">
+                                    New Question 🔄
+                                </button>
+                                <button onclick="closeFlipModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-xl shadow transition cursor-pointer">
+                                    Back to Students ✨
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GRAMMAR CHEAT SHEET MODAL -->
+    <div id="guide-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto pop-in relative">
+            <button onclick="toggleModal('guide-modal')" class="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full font-bold text-xl flex items-center justify-center cursor-pointer">
+                ✕
+            </button>
+            
+            <h3 class="text-2xl font-bold text-indigo-900 mb-4">📚 Quick Grammar Cheat Sheet</h3>
+
+            <div class="space-y-4">
+                <!-- Simple -->
+                <div class="bg-blue-50 p-4 rounded-2xl border-l-4 border-blue-500">
+                    <h4 class="font-bold text-blue-800 text-lg">1. Simple Sentence</h4>
+                    <p class="text-sm text-gray-700 mt-1">Has <b>one independent clause</b> (one complete idea with a subject and a verb). Can have compound subjects or verbs, but still one main thought.</p>
+                    <p class="text-sm font-semibold text-blue-900 mt-2">Example: <u>Sarah and Maya</u> <u>played</u> soccer in the park.</p>
+                </div>
+
+                <!-- Compound -->
+                <div class="bg-emerald-50 p-4 rounded-2xl border-l-4 border-emerald-500">
+                    <h4 class="font-bold text-emerald-800 text-lg">2. Compound Sentence</h4>
+                    <p class="text-sm text-gray-700 mt-1">Joins <b>two complete sentences</b> using a comma + <b>FANBOYS</b>:</p>
+                    <div class="flex flex-wrap gap-1.5 my-2">
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">For</span>
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">And</span>
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">Nor</span>
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">But</span>
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">Or</span>
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">Yet</span>
+                        <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold text-xs">So</span>
+                    </div>
+                    <p class="text-sm font-semibold text-emerald-900">Example: I wanted to go swimming<b>, but</b> the pool was closed.</p>
+                </div>
+
+                <!-- Complex -->
+                <div class="bg-amber-50 p-4 rounded-2xl border-l-4 border-amber-500">
+                    <h4 class="font-bold text-amber-800 text-lg">3. Complex Sentence</h4>
+                    <p class="text-sm text-gray-700 mt-1">Combines <b>1 independent clause</b> + <b>1 dependent clause</b> using a subordinating conjunction:</p>
+                    <div class="flex flex-wrap gap-1.5 my-2">
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">because</span>
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">when</span>
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">although</span>
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">if</span>
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">since</span>
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">while</span>
+                        <span class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold text-xs">before / after</span>
+                    </div>
+                    <p class="text-sm font-semibold text-amber-900">Example: <b>Although</b> it was cold, we ate ice cream.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="toggleModal('guide-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-8 rounded-xl cursor-pointer">
+                    Got it! 👍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. EXACT STUDENT LISTS (Preserved as provided) ---
+        const classRosters = {
+            "Grade 6 A": [
+                "Al Anoud",
+                "Asaeel",
+                "Bana",
+                "Dana Alshhrani",
+                "Danah Hussein",
+                "Danah Saad",
+                "Fatamah",
+                "Hanan Gamal",
+                "Hessa",
+                "Joudi",
+                "Lidya",
+                "Maysoon",
+                "Naglaa",
+                "Nourah",
+                "Rafif",
+                "Reetal",
+                "Sadan",
+                "Cila",
+                "Taraf",
+                "Toleen"
+            ],
+            "Grade 6 D": [
+                "Aleen",
+                "Baya",
+                "Deem",
+                "Dliyil",
+                "Fatamah",
+                "Ghala",
+                "Hala",
+                "Haneen",
+                "Joud",
+                "Jouri",
+                "Lara",
+                "Layan",
+                "Layal",
+                "Loura",
+                "Malak",
+                "Mariam",
+                "Nouf",
+                "Nourah",
+                "Sama",
+                "Yara Al Madi",
+                "Yara Smir"
+            ]
+        };
+
+        // Vibrant distinct card color themes for student cards
+        const cardThemes = [
+            { bg: "from-pink-500 to-rose-500", shadow: "shadow-pink-200", badge: "bg-pink-600", icon: "🌸" },
+            { bg: "from-purple-500 to-indigo-600", shadow: "shadow-purple-200", badge: "bg-purple-600", icon: "🦄" },
+            { bg: "from-sky-400 to-blue-600", shadow: "shadow-sky-200", badge: "bg-blue-600", icon: "🦋" },
+            { bg: "from-emerald-400 to-teal-600", shadow: "shadow-emerald-200", badge: "bg-teal-600", icon: "🍀" },
+            { bg: "from-amber-400 to-orange-500", shadow: "shadow-amber-200", badge: "bg-orange-500", icon: "🌟" },
+            { bg: "from-fuchsia-500 to-purple-600", shadow: "shadow-fuchsia-200", badge: "bg-fuchsia-600", icon: "🎀" },
+            { bg: "from-cyan-500 to-blue-500", shadow: "shadow-cyan-200", badge: "bg-cyan-600", icon: "🐬" },
+            { bg: "from-violet-500 to-indigo-500", shadow: "shadow-violet-200", badge: "bg-violet-600", icon: "🔮" },
+            { bg: "from-rose-400 to-red-500", shadow: "shadow-rose-200", badge: "bg-rose-600", icon: "🍓" },
+            { bg: "from-teal-400 to-emerald-600", shadow: "shadow-teal-200", badge: "bg-emerald-600", icon: "🌈" }
+        ];
+
+        // --- 2. QUESTION BANK (25+ Grade 6 Questions so every student gets a fresh sentence) ---
+        const questionBank = [
+            {
+                sentence: "The astronaut floated inside the space station.",
+                type: "Simple",
+                clue: "Count how many complete ideas are here. Is there any FANBOYS or 'because/when'?",
+                explanationEn: "This has only ONE subject ('The astronaut') and ONE verb ('floated'). It expresses one complete thought."
+            },
+            {
+                sentence: "I studied hard for the science test, so I got an A+.",
+                type: "Compound",
+                clue: "Look at the comma followed by the word 'so' (one of the FANBOYS).",
+                explanationEn: "Two complete sentences are joined together with a comma and the FANBOYS conjunction 'so'."
+            },
+            {
+                sentence: "Because it started raining, we canceled our picnic.",
+                type: "Complex",
+                clue: "Notice the word 'Because' at the start—it makes the first part incomplete on its own!",
+                explanationEn: "'Because it started raining' is a dependent clause joined to the complete sentence 'we canceled our picnic'."
+            },
+            {
+                sentence: "Sara and Maya built a giant sandcastle on the beach.",
+                type: "Simple",
+                clue: "Be careful! Having two names ('Sara and Maya') doesn't make it two separate sentences.",
+                explanationEn: "Even though it has a compound subject ('Sara and Maya'), there is only ONE complete thought."
+            },
+            {
+                sentence: "She wanted to buy the red bike, but she didn't have enough money.",
+                type: "Compound",
+                clue: "Look for a comma + a FANBOYS word showing contrast.",
+                explanationEn: "Two independent clauses are connected by ', but' (a FANBOYS coordinating conjunction)."
+            },
+            {
+                sentence: "When the school bell rang, all the students packed their bags.",
+                type: "Complex",
+                clue: "Look at the first word: 'When'. Can 'When the school bell rang' stand alone as a sentence?",
+                explanationEn: "The subordinating conjunction 'When' creates a dependent clause attached to an independent clause."
+            },
+            {
+                sentence: "We can watch a movie tonight, or we can play board games.",
+                type: "Compound",
+                clue: "Two complete choices joined by a comma and 'or'.",
+                explanationEn: "Both sides of ', or' could stand alone as complete sentences, making this a Compound sentence."
+            },
+            {
+                sentence: "My little sister sleeps with a nightlight because she is afraid of the dark.",
+                type: "Complex",
+                clue: "Look in the middle of the sentence for the word 'because'.",
+                explanationEn: "The subordinating conjunction 'because' connects the dependent clause to the main clause."
+            },
+            {
+                sentence: "Every morning, the baker wakes up early and bakes fresh bread.",
+                type: "Simple",
+                clue: "Is there a second subject after the word 'and'?",
+                explanationEn: "There is only ONE subject ('the baker') doing two actions ('wakes' and 'bakes'). It's a Simple sentence!"
+            },
+            {
+                sentence: "Although the mountain was steep, the hikers reached the top.",
+                type: "Complex",
+                clue: "The sentence begins with the subordinating conjunction 'Although'.",
+                explanationEn: "'Although the mountain was steep' cannot stand alone; it depends on the second half of the sentence."
+            },
+            {
+                sentence: "The cheetah is the fastest land animal, yet it gets tired quickly.",
+                type: "Compound",
+                clue: "Notice ', yet' connecting two complete facts about the cheetah.",
+                explanationEn: "'Yet' is one of the FANBOYS conjunctions joining two independent clauses."
+            },
+            {
+                sentence: "If you finish your homework early, you can play video games.",
+                type: "Complex",
+                clue: "Starts with a condition word: 'If'.",
+                explanationEn: "'If you finish your homework early' is a dependent clause starting with 'If'."
+            },
+            {
+                sentence: "Bright yellow sunflowers bloomed across the wide field.",
+                type: "Simple",
+                clue: "Just one subject and one action!",
+                explanationEn: "One subject ('sunflowers') + one verb ('bloomed') = one Simple sentence."
+            },
+            {
+                sentence: "I forgot my umbrella at home, for the weather forecast looked sunny.",
+                type: "Compound",
+                clue: "Here, ', for' means 'because' and is part of FANBOYS!",
+                explanationEn: "Two complete sentences are joined with a comma and 'for' (the 'F' in FANBOYS)."
+            },
+            {
+                sentence: "We always wash our hands before we eat dinner.",
+                type: "Complex",
+                clue: "Look at the time word 'before' connecting two clauses.",
+                explanationEn: "'Before we eat dinner' is a dependent clause introduced by 'before'."
+            },
+            {
+                sentence: "The playful kitten chased the red yarn across the living room.",
+                type: "Simple",
+                clue: "Count the verbs—only one main action is happening!",
+                explanationEn: "One subject ('The playful kitten') and one verb ('chased') make a Simple sentence."
+            },
+            {
+                sentence: "Nora practiced the piano every day, and she won first place in the concert.",
+                type: "Compound",
+                clue: "Two complete sentences joined by ', and'.",
+                explanationEn: "Two independent clauses are joined with a comma and the FANBOYS word 'and'."
+            },
+            {
+                sentence: "While the cookies were baking in the oven, the kitchen smelled delicious.",
+                type: "Complex",
+                clue: "Starts with the subordinating conjunction 'While'.",
+                explanationEn: "'While the cookies were baking in the oven' is a dependent clause attached to a complete sentence."
+            },
+            {
+                sentence: "After the rain stopped, a bright rainbow appeared in the sky.",
+                type: "Complex",
+                clue: "Look at the opening clause: 'After the rain stopped'.",
+                explanationEn: "'After' is a subordinating conjunction creating a dependent clause."
+            },
+            {
+                sentence: "Birds sing sweet melodies in the tall trees at sunrise.",
+                type: "Simple",
+                clue: "Prepositional phrases like 'in the tall trees' don't make it complex!",
+                explanationEn: "It still has only one subject ('Birds') and one verb ('sing')—one complete thought."
+            },
+            {
+                sentence: "He didn't like broccoli, nor did he want to eat his carrots.",
+                type: "Compound",
+                clue: "Look for ', nor'—the 'N' in FANBOYS!",
+                explanationEn: "Two independent clauses are joined by a comma and 'nor'."
+            },
+            {
+                sentence: "Since we arrived early at the airport, we had time for breakfast.",
+                type: "Complex",
+                clue: "Begins with 'Since' (meaning 'because').",
+                explanationEn: "'Since we arrived early at the airport' is a dependent clause."
+            },
+            {
+                sentence: "The school bus arrived on time this morning.",
+                type: "Simple",
+                clue: "Short, sweet, and one complete idea!",
+                explanationEn: "One subject ('The school bus') + one verb ('arrived') = Simple sentence."
+            }
+        ];
+
+        // --- 3. ENCOURAGEMENT MESSAGES ---
+        const positiveMessages = [
+            "👏 Brilliant job, {name}! You nailed it!",
+            "🌟 Amazing work, {name}! You're a Grammar Star!",
+            "🎉 Fantastic, {name}! Keep shining bright!",
+            "🏆 Spot on, {name}! Super smart answer!",
+            "💫 Way to go, {name}! That was awesome!"
+        ];
+
+        const gentleMessages = [
+            "💛 Good try, {name}! Don't give up, you've got this!",
+            "🌈 Almost there, {name}! Let's learn from this one!",
+            "✨ Nice effort, {name}! Every mistake helps us grow!",
+            "💪 Keep going, {name}! You'll get the next one!"
+        ];
+
+        // --- 4. GAME STATE VARIABLES ---
+        let selectedClass = "Grade 6 A";
+        let activeStudentIndex = null;
+        let activeQuestion = null;
+        let soundEnabled = true;
+        // Tracks status per class: { "Grade 6 A": { 0: 'correct', 1: 'wrong' }, ... }
+        let studentProgress = {
+            "Grade 6 A": {},
+            "Grade 6 D": {}
+        };
+        let usedQuestionIndices = [];
+
+        // --- 5. WEB AUDIO API SOUND EFFECTS (Applause + Cheerful Chimes + Gentle Oops) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playApplause() {
+            if (!soundEnabled) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+
+            // Celebratory Fanfare Notes
+            const fanfare = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            fanfare.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + i * 0.09);
+                gain.gain.setValueAtTime(0.22, now + i * 0.09);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.09 + 0.45);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.09);
+                osc.stop(now + i * 0.09 + 0.45);
+            });
+
+            // Realistic Clapping / Applause Synthesis (Multiple filtered noise bursts)
+            const clapCount = 26;
+            for (let i = 0; i < clapCount; i++) {
+                const delay = Math.random() * 1.4;
+                const duration = 0.06 + Math.random() * 0.04;
+                const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let j = 0; j < bufferSize; j++) {
+                    data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (bufferSize * 0.35));
+                }
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 900 + Math.random() * 900;
+                filter.Q.value = 1.2;
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.28, now + delay);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + delay + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                noise.start(now + delay);
+            }
+        }
+
+        function playWrongSound() {
+            if (!soundEnabled) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+            // Gentle descending two-tone sound
+            const freqs = [330, 261.63]; // E4 -> C4
+            freqs.forEach((f, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(f, now + idx * 0.18);
+                gain.gain.setValueAtTime(0.25, now + idx * 0.18);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.18 + 0.35);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + idx * 0.18);
+                osc.stop(now + idx * 0.18 + 0.35);
+            });
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        // --- 6. ROSTER & FLIP CARD LOGIC ---
+        function openClassRoster(className) {
+            selectedClass = className;
+
+            // Update Header Badge
+            const badge = document.getElementById('header-class-badge');
+            badge.textContent = selectedClass;
+            badge.classList.remove('hidden');
+
+            // Update Roster Title
+            document.getElementById('roster-title').textContent = `${selectedClass} — Student Stars ✨`;
+
+            // Switch Screens
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('roster-screen').classList.remove('hidden');
+
+            renderStudentGrid();
+        }
+
+        function returnToDashboard() {
+            document.getElementById('roster-screen').classList.add('hidden');
+            document.getElementById('general-screen').classList.add('hidden');
+            document.getElementById('header-class-badge').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        // --- GENERAL QUESTIONS (10 QUESTIONS MODE) ---
+        let generalQuestions = [];
+        let genCurrentIndex = 0;
+        let genScore = 0;
+        let genAttemptedCurrent = false;
+
+        function startGeneralQuiz() {
+            // Pick 10 shuffled questions from questionBank
+            const shuffled = [...questionBank].sort(() => Math.random() - 0.5);
+            generalQuestions = shuffled.slice(0, 10);
+            genCurrentIndex = 0;
+            genScore = 0;
+
+            const badge = document.getElementById('header-class-badge');
+            badge.textContent = "General Challenge";
+            badge.classList.remove('hidden');
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('roster-screen').classList.add('hidden');
+            document.getElementById('general-screen').classList.remove('hidden');
+
+            document.getElementById('gen-summary-area').classList.add('hidden');
+            document.getElementById('gen-question-area').classList.remove('hidden');
+
+            loadGeneralQuestion();
+        }
+
+        function loadGeneralQuestion() {
+            genAttemptedCurrent = false;
+            const q = generalQuestions[genCurrentIndex];
+
+            document.getElementById('gen-q-num').textContent = genCurrentIndex + 1;
+            document.getElementById('gen-score').textContent = genScore;
+            document.getElementById('gen-progress-bar').style.width = `${((genCurrentIndex + 1) / 10) * 100}%`;
+
+            document.getElementById('gen-sentence-text').textContent = `"${q.sentence}"`;
+            document.getElementById('gen-hint-btn').classList.remove('hidden');
+            document.getElementById('gen-hint-text').classList.add('hidden');
+            document.getElementById('gen-hint-text').textContent = q.clue;
+
+            document.getElementById('gen-options-container').classList.remove('hidden');
+            document.getElementById('gen-feedback-box').classList.add('hidden');
+            document.getElementById('gen-retry-btn').classList.add('hidden');
+            document.getElementById('gen-next-btn').textContent = genCurrentIndex === 9 ? "Finish Challenge 🏁" : "Next Question ➡️";
+        }
+
+        function showGenHint() {
+            document.getElementById('gen-hint-btn').classList.add('hidden');
+            document.getElementById('gen-hint-text').classList.remove('hidden');
+        }
+
+        function submitGeneralAnswer(selectedType) {
+            const q = generalQuestions[genCurrentIndex];
+            const isCorrect = selectedType === q.type;
+
+            document.getElementById('gen-options-container').classList.add('hidden');
+            document.getElementById('gen-hint-btn').classList.add('hidden');
+
+            const feedbackBox = document.getElementById('gen-feedback-box');
+            const encouragementEl = document.getElementById('gen-encouragement');
+            const explanationEl = document.getElementById('gen-explanation');
+            const retryBtn = document.getElementById('gen-retry-btn');
+
+            if (isCorrect) {
+                playApplause();
+                launchConfetti();
+                if (!genAttemptedCurrent) {
+                    genScore++;
+                    document.getElementById('gen-score').textContent = genScore;
+                }
+                feedbackBox.className = 'pop-in rounded-2xl p-5 border-2 border-emerald-300 bg-emerald-50 text-center space-y-3 max-w-2xl mx-auto';
+                encouragementEl.innerHTML = `<span class="text-emerald-600">👏 Awesome! Spot on!</span>`;
+                explanationEl.innerHTML = `Correct! It is a <b>${q.type}</b> sentence. ${q.explanationEn}`;
+                retryBtn.classList.add('hidden');
+            } else {
+                playWrongSound();
+                genAttemptedCurrent = true;
+                feedbackBox.className = 'pop-in rounded-2xl p-5 border-2 border-amber-300 bg-amber-50 text-center space-y-3 max-w-2xl mx-auto animate-shake';
+                encouragementEl.innerHTML = `<span class="text-amber-700">💛 Good try! Look at the hint and try again:</span>`;
+                explanationEl.innerHTML = `<span class="inline-block bg-purple-100 text-purple-800 px-3 py-1 rounded-xl font-semibold">💡 Hint: ${q.clue}</span>`;
+                retryBtn.classList.remove('hidden');
+            }
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function retryGeneralSameQuestion() {
+            document.getElementById('gen-feedback-box').classList.add('hidden');
+            document.getElementById('gen-options-container').classList.remove('hidden');
+            document.getElementById('gen-hint-btn').classList.remove('hidden');
+        }
+
+        function nextGeneralQuestion() {
+            genCurrentIndex++;
+            if (genCurrentIndex < 10) {
+                loadGeneralQuestion();
+            } else {
+                showGeneralSummary();
+            }
+        }
+
+        function showGeneralSummary() {
+            playApplause();
+            launchConfetti();
+            document.getElementById('gen-question-area').classList.add('hidden');
+            document.getElementById('gen-summary-area').classList.remove('hidden');
+            document.getElementById('gen-final-score-text').textContent = `Final Score: ${genScore} / 10`;
+
+            let remark = "Great effort! Keep practicing to become a Sentence Master!";
+            if (genScore === 10) remark = "Perfect 10/10! You are an absolute Grammar Superstar! 🌟";
+            else if (genScore >= 7) remark = "Fantastic job! You have a strong grasp of sentence structures! 🎉";
+            document.getElementById('gen-final-remark').textContent = remark;
+        }
+
+        function exitGeneralQuiz() {
+            returnToDashboard();
+        }
+
+        function renderStudentGrid() {
+            const grid = document.getElementById('students-grid');
+            grid.innerHTML = '';
+
+            const students = classRosters[selectedClass];
+            const progress = studentProgress[selectedClass];
+            let completedCount = 0;
+
+            students.forEach((studentName, idx) => {
+                const theme = cardThemes[idx % cardThemes.length];
+                const status = progress[idx]; // 'correct' | 'wrong' | undefined
+                if (status) completedCount++;
+
+                let statusBadge = '';
+                let cardOpacity = '';
+                if (status === 'correct') {
+                    statusBadge = `<span class="absolute top-2.5 right-2.5 bg-white text-emerald-600 text-xs font-bold px-2 py-0.5 rounded-full shadow">✅ Star!</span>`;
+                } else if (status === 'wrong') {
+                    statusBadge = `<span class="absolute top-2.5 right-2.5 bg-white text-amber-600 text-xs font-bold px-2 py-0.5 rounded-full shadow">🔄 Retry</span>`;
+                }
+
+                const card = document.createElement('button');
+                card.onclick = () => openStudentFlipCard(idx);
+                card.className = `student-card relative bg-gradient-to-br ${theme.bg} text-white rounded-2xl p-5 shadow-lg ${theme.shadow} border-2 border-white/60 flex flex-col items-center justify-center text-center min-h-[135px] cursor-pointer ${cardOpacity}`;
+                
+                card.innerHTML = `
+                    ${statusBadge}
+                    <span class="text-3xl mb-2 drop-shadow-sm">${theme.icon}</span>
+                    <span class="font-bold text-lg md:text-xl leading-tight drop-shadow-sm">${studentName}</span>
+                    <span class="mt-2 text-[11px] uppercase tracking-wider bg-black/15 px-2.5 py-0.5 rounded-full font-semibold">
+                        Tap to Flip
+                    </span>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            document.getElementById('roster-progress').textContent = `${completedCount}/${students.length}`;
+        }
+
+        function getNextQuestion() {
+            if (usedQuestionIndices.length >= questionBank.length) {
+                usedQuestionIndices = [];
+            }
+            let randomIdx;
+            do {
+                randomIdx = Math.floor(Math.random() * questionBank.length);
+            } while (usedQuestionIndices.includes(randomIdx));
+            
+            usedQuestionIndices.push(randomIdx);
+            return questionBank[randomIdx];
+        }
+
+        function openStudentFlipCard(studentIdx) {
+            activeStudentIndex = studentIdx;
+            const studentName = classRosters[selectedClass][studentIdx];
+            const theme = cardThemes[studentIdx % cardThemes.length];
+            activeQuestion = getNextQuestion();
+
+            // Setup Front Face
+            const frontFace = document.getElementById('flip-front-face');
+            frontFace.className = `flip-card-front bg-gradient-to-br ${theme.bg} text-white p-8 flex flex-col items-center justify-center shadow-2xl border-4 border-white`;
+            document.getElementById('flip-front-name').textContent = studentName;
+
+            // Setup Back Face
+            const studentBadge = document.getElementById('active-student-badge');
+            studentBadge.textContent = `${theme.icon} ${studentName}`;
+            studentBadge.className = `px-4 py-1.5 rounded-full text-white font-bold text-base shadow-sm ${theme.badge}`;
+            document.getElementById('active-class-pill').textContent = selectedClass;
+
+            document.getElementById('card-sentence-text').textContent = `"${activeQuestion.sentence}"`;
+            
+            // Reset Hint & Feedback
+            document.getElementById('card-hint-btn').classList.remove('hidden');
+            document.getElementById('card-hint-text').classList.add('hidden');
+            document.getElementById('card-hint-text').textContent = activeQuestion.clue;
+
+            document.getElementById('card-options-container').classList.remove('hidden');
+            document.getElementById('card-feedback-box').classList.add('hidden');
+            document.getElementById('same-question-btn').classList.add('hidden');
+            document.getElementById('try-again-btn').classList.add('hidden');
+
+            // Show Modal & Trigger 3D Flip Animation
+            const flipInner = document.getElementById('flip-card-inner');
+            flipInner.classList.remove('is-flipped');
+            document.getElementById('flip-modal').classList.remove('hidden');
+
+            setTimeout(() => {
+                flipInner.classList.add('is-flipped');
+            }, 250);
+        }
+
+        function showCardHint() {
+            document.getElementById('card-hint-btn').classList.add('hidden');
+            document.getElementById('card-hint-text').classList.remove('hidden');
+        }
+
+        function submitStudentAnswer(selectedType) {
+            const studentName = classRosters[selectedClass][activeStudentIndex];
+            const isCorrect = selectedType === activeQuestion.type;
+
+            document.getElementById('card-options-container').classList.add('hidden');
+            document.getElementById('card-hint-btn').classList.add('hidden');
+
+            const feedbackBox = document.getElementById('card-feedback-box');
+            const encouragementEl = document.getElementById('card-encouragement');
+            const explanationEl = document.getElementById('card-explanation');
+            const sameQuestionBtn = document.getElementById('same-question-btn');
+            const tryAgainBtn = document.getElementById('try-again-btn');
+
+            if (isCorrect) {
+                playApplause();
+                launchConfetti();
+                studentProgress[selectedClass][activeStudentIndex] = 'correct';
+
+                const rawMsg = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
+                const personalMsg = rawMsg.replace('{name}', studentName);
+
+                feedbackBox.className = 'pop-in rounded-2xl p-4 border-2 border-emerald-300 bg-emerald-50 text-center space-y-2';
+                encouragementEl.innerHTML = `<span class="text-emerald-600">${personalMsg}</span>`;
+                explanationEl.innerHTML = `Correct! It is a <b>${activeQuestion.type}</b> sentence. ${activeQuestion.explanationEn}`;
+                sameQuestionBtn.classList.add('hidden');
+                tryAgainBtn.classList.add('hidden');
+            } else {
+                playWrongSound();
+                studentProgress[selectedClass][activeStudentIndex] = 'wrong';
+
+                const rawMsg = gentleMessages[Math.floor(Math.random() * gentleMessages.length)];
+                const personalMsg = rawMsg.replace('{name}', studentName);
+
+                feedbackBox.className = 'pop-in rounded-2xl p-4 border-2 border-amber-300 bg-amber-50 text-center space-y-2 animate-shake';
+                encouragementEl.innerHTML = `<span class="text-amber-700">${personalMsg}</span>`;
+                explanationEl.innerHTML = `<span class="inline-block bg-purple-100 text-purple-800 px-3 py-1 rounded-xl font-semibold">💡 Hint: ${activeQuestion.clue}</span>`;
+                sameQuestionBtn.classList.remove('hidden');
+                tryAgainBtn.classList.remove('hidden');
+            }
+
+            feedbackBox.classList.remove('hidden');
+            renderStudentGrid();
+        }
+
+        function retrySameQuestion() {
+            document.getElementById('card-feedback-box').classList.add('hidden');
+            document.getElementById('card-options-container').classList.remove('hidden');
+            document.getElementById('card-hint-btn').classList.remove('hidden');
+        }
+
+        function retryStudentQuestion() {
+            openStudentFlipCard(activeStudentIndex);
+        }
+
+        function closeFlipModal() {
+            document.getElementById('flip-card-inner').classList.remove('is-flipped');
+            setTimeout(() => {
+                document.getElementById('flip-modal').classList.add('hidden');
+            }, 200);
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
+        // --- 7. CONFETTI CELEBRATION ---
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+            for (let i = 0; i < 120; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    w: Math.random() * 10 + 6,
+                    h: Math.random() * 6 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 4 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            let frame = 0;
+            function animateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.rotation += 5;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+                });
+
+                frame++;
+                if (frame < 180) {
+                    requestAnimationFrame(animateConfetti);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animateConfetti();
+        }
+    </script>
+</body>
+</html>
